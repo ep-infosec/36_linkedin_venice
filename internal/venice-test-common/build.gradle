@@ -1,0 +1,100 @@
+configurations {
+  all {
+    resolutionStrategy {
+      force libraries.kafka
+      force libraries.javax
+    }
+  }
+  implementation {
+    exclude group: 'org.apache.kafka'
+    exclude group: 'org.mortbay.jetty', module: 'servlet-api'
+  }
+  jmhImplementation.extendsFrom testImplementation
+  integrationTestImplementation.extendsFrom testImplementation
+}
+
+sourceSets {
+  jmh {
+    java.srcDirs = ['src/jmh/java']
+  }
+
+  integrationTest {
+    java.srcDirs = ['src/integrationtest/java']
+    resources.srcDirs = ['src/integrationtest/resources']
+  }
+}
+
+dependencies {
+  implementation (libraries.d2) {
+    exclude group: 'com.oracle', module: 'ojdbc14' // unused transitive dependencies, doesn't exist in repo
+    // this will introduce another different mockito-all version
+    exclude group: 'org.mockito', module: 'mockito-all'
+  }
+
+  implementation project(':clients:da-vinci-client')
+  implementation project(':clients:venice-push-job')
+  implementation project(':internal:venice-common')
+  implementation project(':services:venice-controller')
+  implementation project(':services:venice-router')
+  implementation project(':clients:venice-samza')
+  implementation project(':internal:venice-client-common')
+  implementation project(':services:venice-server')
+  implementation project(':clients:venice-thin-client')
+  implementation project(':internal:alpini:netty4:alpini-netty4-base')
+  implementation project(':internal:alpini:router:alpini-router-api')
+  implementation project(':internal:alpini:router:alpini-router-base')
+
+  implementation libraries.avroUtilCompatHelper
+  implementation libraries.avroUtilFastserde
+  implementation libraries.commonsCli
+  implementation libraries.conscrypt
+  implementation libraries.hadoopCommon
+  implementation libraries.helix
+  implementation libraries.httpAsyncClient
+  implementation libraries.javax
+  implementation libraries.kafka
+  implementation libraries.kafkaClients
+  implementation libraries.kafkaClientsTest
+  implementation libraries.mockito
+  implementation libraries.rocksdbjni
+  implementation libraries.samzaApi
+  implementation libraries.spark
+  implementation libraries.testng
+
+  testImplementation (libraries.mapreduceClientJobClient) {
+    exclude group: 'org.apache.avro'
+    exclude group: 'javax.servlet'
+  }
+  testImplementation project(':clients:venice-admin-tool')
+  testImplementation project(':internal:alpini:common:alpini-common-base')
+
+  jmhAnnotationProcessor libraries.jmhGenerator
+  jmhImplementation libraries.jmhCore
+}
+
+task jmh(type: JavaExec, dependsOn: jmhClasses) {
+  main = 'org.openjdk.jmh.Main'
+  classpath = sourceSets.jmh.runtimeClasspath
+}
+
+task integrationTest(type: Test) {
+  mustRunAfter test
+  classpath = sourceSets.integrationTest.runtimeClasspath
+  testClassesDirs = sourceSets.integrationTest.output.classesDirs
+  forkEvery = Integer.parseInt(project.properties.get('integrationTest.forkEvery', "$forkEvery"))
+  maxParallelForks = Integer.parseInt(project.properties.get('integrationTest.maxParallelForks', "$maxParallelForks"))
+}
+check.dependsOn(integrationTest)
+
+flakyTest {
+  classpath += sourceSets.integrationTest.runtimeClasspath
+  testClassesDirs += sourceSets.integrationTest.output.classesDirs
+}
+
+idea {
+  module {
+    testSourceDirs += project.sourceSets.integrationTest.java.srcDirs
+    testResourceDirs += project.sourceSets.integrationTest.resources.srcDirs
+    // testSourceDirs += project.sourceSets.jmh.java.srcDirs // broken, somehow, gotta debug...
+  }
+}

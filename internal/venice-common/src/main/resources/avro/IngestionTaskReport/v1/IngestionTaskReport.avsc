@@ -1,0 +1,52 @@
+{
+  "name": "IngestionTaskReport",
+  "namespace": "com.linkedin.venice.ingestion.protocol",
+  "type": "record",
+  "fields": [
+    {
+      "name": "topicName",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "partitionId",
+      "type": "int"
+    },
+    {
+      "name": "offset",
+      "type": "long"
+    },
+    {
+      "name": "isPositive",
+      "type": "boolean",
+      "default": true
+    },
+    {
+      "name": "reportType",
+      "doc": "0 => Completed, 1=> Errored, 2 => Started, 3 => Restarted, 4 => Progress, 5 => EndOfPushReceived, 6 => StartOfBufferReplayReceived, 7 => StartOfIncrementalPushReceived, 8 => EndOfIncrementalPushReceived, 9 => TopicSwitchReceived",
+      "type": "int"
+    },
+    {
+      "name": "message",
+      "type": "string",
+      "default": ""
+    },
+    {
+      "name": "offsetRecordArray",
+      "type": {
+        "type": "array",
+        "items": "bytes"
+      },
+      "default": []
+    },
+    {
+      "name": "storeVersionState",
+      "type": ["null", "bytes"],
+      "default": null
+    },
+    {
+      "name": "leaderFollowerState",
+      "type": "int"
+    }
+  ]
+}
